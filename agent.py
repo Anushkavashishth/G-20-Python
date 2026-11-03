@@ -11,9 +11,9 @@
 # is back above its average or the news turns bad. Never put more than 40% of the money
 # into shares, so that one bad run cannot halve the account.
 
-GROUP_CODE = "GXX-XXXX"       # <- replace this with your group's code
-# Group: <every member's full name, separated by commas>
-# Reference: <the full name of this file's reference member>
+GROUP_CODE = "G20-G7NR"       
+# Group: Dev Madanlal Malviya, Atharva Zade, Dhruv Rastogi, Anushka Vashishth, Shefali Mathur, Boyang Gao 
+# Reference: G7NR
 
 FEE = 0.001                # 0.1% fee on every trade, the same as the desk charges
 TARGET = 0.4               # when we buy, aim for 40% of our money in shares
