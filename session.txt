@@ -1,0 +1,9 @@
+ticker=ZNTH
+folder=data/training/
+day=0
+cash=10000.0
+shares=0.0
+start_cash=10000.0
+start_shares=0.0
+equity=10000.000000
+trades=
