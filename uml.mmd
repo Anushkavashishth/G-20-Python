@@ -1,0 +1,20 @@
+flowchart TD
+    S((Start)) --> A[Start desk.py<br/>defaults: cash 10000, shares 0]
+    A --> B[Load dataset<br/>prices, news, lexicon]
+    B --> C{Loaded OK?}
+    C -- no: show message --> B
+    C -- yes --> D[Show menu and status line]
+    D --> E{User's choice}
+    E -- 3 --> F[Step one day]
+    E -- 4 / 5 --> G[Manual buy / sell<br/>Account.execute at today's close]
+    E -- 6 --> H[Run agent to end<br/>Simulator: decide on day t,<br/>fill at day t+1 open]
+    E -- 7 / 8 --> I[Show charts<br/>price + trades, equity, drawdown]
+    E -- 9 --> J[Save / load<br/>session, results, leaderboard]
+    E -- 2 --> K[Set starting cash and shares]
+    F --> D
+    G --> D
+    H --> D
+    I --> D
+    J --> D
+    K --> D
+    E -- 0 --> Z((End))
