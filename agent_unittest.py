@@ -1,77 +1,31 @@
-# agent_unittest.py
-#
-# A BASIC "will my agent work in the competition?" check. It does NOT score your strategy
-# or judge whether it makes money. It only acts as a SIMULATED INTERFACE: it sends your
-# TradingAgent the same kind of values the real competition will (a price bar, headlines,
-# your cash and shares, and the reply to your last order) and checks that your agent
-# always answers with a well-formed order and never crashes. It also checks that agent.py
-# carries your group code, the line the checks read to know whose file it is, warns when
-# the file does not name your group's members and its reference member, and it
-# reads agent.py itself for what the rules forbid in it: imports outside the allowed four,
-# reading files or the keyboard, and the pandas shortcuts the library policy bans. A file
-# WRITE passes here with a warning, so you can debug with a log file, but the version you
-# submit must not write: the online check and the competition run agent.py where nothing can
-# be written. Every finding names its line in agent.py, and so does a crash. If it seems
-# to hang, press Ctrl-C once: the report names the line your agent was running. The online
-# check and the competition run Python 3.12 with numpy 2 and pandas 3, so a form that loads
-# only on a newer Python fails here too, with the error 3.12 gives, and an older numpy or
-# pandas on this machine earns a warning that says why it matters and how to update.
-#
-# Run it with:   python3 agent_unittest.py      (on Windows: python agent_unittest.py)
-# Copy it next to your agent.py. If every line says OK, your agent fits the contract.
-
 import ast
 import math
 import numbers
 import sys
 
-FEE = 0.001            # 0.1% trading cost, matching the real Account
+FEE = 0.001            
 ALLOWED_IMPORTS = ("numpy", "pandas", "math", "random")
 
-# The libraries the online check and the competition run, by major version: Python 3.12
-# with numpy 2 and pandas 3. A Python older than 3.11 can only install pandas 2, and there
-# an agent can trade differently: pandas 3 never lets chained assignment, df["col"][i] = x,
-# change the frame, and pandas 2 does. One agent measured both ways ended at 8764.67 under
-# pandas 2.3.3 and never traded under pandas 3.0.6, which is not placed (review 184).
+
 COMPETITION_LIBRARIES = (("numpy", 2), ("pandas", 3))
 OLDER_LIBRARIES = "older than the competition's"
-# The exact stack the online check and the competition run, frozen for the term: the
-# worker's Dockerfile and the course's pins, which check_rule_agreement holds this to.
 COMPETITION_STACK = (("Python", "3.12"), ("numpy", "2.5.3"), ("pandas", "3.0.6"))
-
-# Your group code, e.g. G07-4KQT. The characters avoid every pair that gets misread: no
-# 0/1/2/5/8, no B/I/O/S/Z. The last character is a check character computed from the rest,
-# which is how the line below can tell a mistyped code from a real one without needing a
-# list of every group's code. It cannot tell you a code is YOURS, only that it is a code.
 CODE_ALPHABET = "34679ACDEFGHJKLMNPQRTUVWXY"
 CODE_WEIGHTS = (3, 5, 7, 9, 11)
 CODE_PLACEHOLDER = "GXX-XXXX"
 
-# The checks a complete run performs, in the order the report prints them. Each result
-# below carries one of these ids as well as its printed name: the name is written for you
-# and changes with the answer ("well-formed order" vs "decide() crashed"), while the id stays
-# put, so anything counting or comparing runs has something stable to hold on to. The last
-# two are read from the text of agent.py before anything imports it, and printed last.
 ALL_CHECK_IDS = ("self_contained", "group_code", "loads", "regime_ohlcv", "regime_news",
                  "regime_both", "reject_reply", "none_last_response", "no_io",
                  "banned_shortcuts")
 
-# Calls agent.py may not make, because they READ from outside decide(). Your agent is handed
-# its data one day at a time through decide(): an agent that reads a file could see days it
-# has not reached yet, and in the competition there are no files beside it to read. eval,
-# exec and __import__ are here because they are how code, or an import, slips past a scan
-# that reads the text. open() is judged by its mode (reading fails, writing warns), and so
-# are pandas' read_ functions and numpy's load, by the module they are called on.
+
 READ_CALLS = ("input", "eval", "exec", "__import__",
               "read_csv", "read_json", "read_pickle", "read_excel", "read_table",
               "read_fwf", "read_html", "read_parquet", "read_feather", "read_hdf",
               "read_sql", "read_xml", "read_clipboard",
               "loadtxt", "genfromtxt", "fromfile")
 
-# Calls that WRITE a file. They pass here, with a warning: on your own machine a log file is
-# a fair way to debug. The version you submit must not write, and the online check and the
-# competition run it where nothing can be written, so there the write fails. to_csv, to_json
-# and to_xml write only when given a path; without one they return text, not a file.
+
 WRITE_CALLS = ("to_csv", "to_json", "to_xml", "to_pickle", "to_excel", "to_parquet",
                "to_feather", "to_hdf", "to_sql", "savetxt", "tofile")
 WRITES_ONLY_WITH_PATH = ("to_csv", "to_json", "to_xml")
@@ -79,23 +33,15 @@ WRITE_WARNING = ("allowed on your own machine, for debugging; remove it before y
                  "the online check and the competition run agent.py where nothing can be "
                  "written, so there the write fails with OSError")
 
-# Warnings are findings that fail nothing but matter later. Three kinds: a write, found here
-# in the text of agent.py, which works on your machine and not in what you submit; an agent
-# that never has 10% of its money in shares, found by selfcheck.py, which runs it on real
-# data; and a file that does not name its group and its reference member. They never count
-# toward the checks passed.
+
 ALL_WARNING_IDS = ("writes_file", "never_traded", "unnamed")
 
-# Under GROUP_CODE, agent.py names every member of the group and the member who is the
-# file's reference: the one who makes any live change to it at the interview. Nothing checks
-# the names against a list, and a missing line fails nothing; it is a warning.
+
 NAMES_WARNING = ("under GROUP_CODE, add a '# Group:' comment with every member's full "
                  "name and a '# Reference:' comment with the member who makes any live "
                  "change to this file at the interview; the checks pass either way")
 
-# The pandas time-series shortcuts the library policy bans in submitted code: they do the
-# exact work the project marks you on building. (plt.hist and tkinter's Canvas are banned
-# too, but neither library may be imported in agent.py, so the import check stops them.)
+
 BANNED_SHORTCUTS = ("rolling", "shift", "pct_change", "cumprod")
 
 
@@ -110,15 +56,14 @@ def load_agent():
     try:
         import agent
     except BaseException as error:
-        # BaseException, not Exception: an agent.py that calls sys.exit() at the top
-        # would otherwise take this tool down with it, silently.
+
         return None, error_with_line(error) + not_installed(error)
     newer_only = fails_on_python_312(agent)
     if newer_only != "":
         return None, newer_only
     TradingAgent = getattr(agent, "TradingAgent", None)
     if TradingAgent is None:
-        # Nothing in the file to point at: the finding is that the class is not there.
+        
         return None, ("agent.py has no class named TradingAgent -- the name is exact, "
                       "capitals included")
     return TradingAgent, ""
@@ -150,12 +95,12 @@ def stack_here():
     parts = ["Python " + ".".join(str(part) for part in sys.version_info[:3])]
     try:
         from importlib import metadata
-    except ImportError:                       # Python 3.7 and older
+    except ImportError:                       
         return parts[0]
     for name in ("numpy", "pandas"):
         try:
             parts.append(name + " " + metadata.version(name))
-        except Exception:                     # not installed
+        except Exception:                    
             parts.append(name + " not installed")
     return ", ".join(parts)
 
@@ -173,7 +118,7 @@ def older_libraries():
     fails its loads check, with the fix)."""
     try:
         from importlib import metadata
-    except ImportError:                       # Python 3.7 and older
+    except ImportError:                      
         return []
     older = []
     for name, major in COMPETITION_LIBRARIES:
@@ -181,7 +126,7 @@ def older_libraries():
             installed = metadata.version(name)
             if int(installed.split(".")[0]) < major:
                 older.append((name, installed))
-        except Exception:                     # not installed, or an unreadable version
+        except Exception:                     
             continue
     return older
 
@@ -296,8 +241,6 @@ def is_agent_file(filename):
     return str(filename).replace("\\", "/").split("/")[-1] == "agent.py"
 
 
-# What a check says when you pressed Ctrl-C while your agent was running. selfcheck.py
-# looks for it too, so that one Ctrl-C stops everything instead of one check at a time.
 CTRL_C = "stopped with Ctrl-C"
 
 
@@ -345,7 +288,7 @@ def error_with_line(error, called=None):
                 + str(error.msg))
     try:
         message = str(error)
-    except Exception:  # an error class of your own whose __str__ fails: report its name
+    except Exception:  
         message = ""
     if isinstance(error, KeyboardInterrupt):
         text = CTRL_C + " while your agent was running this line -- a loop that never ends?"
@@ -414,11 +357,6 @@ def at_line(number):
         return "line " + str(number) + ": "
     return ""
 
-
-# A tiny stand-in for the real interface: it tracks cash/shares, charges the same 0.1%
-# fee, and replies ACCEPT or a REJECT string exactly like the real Account does. (If you
-# size a buy to the last cent without allowing for the fee, you get the same REJECT here
-# that you would get in the competition.)
 def plain(amount):
     """An order's amount as Python's own number: a count that came out of numpy becomes an
     int, a numpy float a float, so the cash and shares it changes stay plain floats."""
@@ -440,8 +378,7 @@ class FakeInterface:
         if action == "BUY":
             if amount < 0:
                 amount = int(self.cash / (price * (1.0 + FEE)))
-                # Cash that sits exactly on a whole share can round the division up by one:
-                # take the share it cannot pay for back, so a -1 order is never refused.
+                
                 if amount * price * (1.0 + FEE) > self.cash:
                     amount = amount - 1
             if amount <= 0:
@@ -464,8 +401,6 @@ class FakeInterface:
             return "ACCEPT"
         return "ACCEPT"
 
-
-# A few fake days of data to feed the agent.
 FAKE_BARS = [
     {"open": 100.0, "high": 102.0, "low": 99.0, "close": 101.0, "volume": 1000.0},
     {"open": 101.0, "high": 103.0, "low": 100.0, "close": 100.0, "volume": 1200.0},
@@ -496,10 +431,7 @@ def is_valid_order(order):
     if not isinstance(amount, numbers.Real):
         return False
     if amount != amount:
-        return False           # NaN is not a real order
-    # Anything the competition cannot turn into a float is not a real order either. It
-    # uses math.isfinite, which RAISES on an int bigger than a float can hold, so the
-    # test here has to reject those too or the two tools disagree.
+        return False           
     try:
         if not math.isfinite(amount):
             return False
@@ -531,9 +463,7 @@ def is_valid_code(code):
     the arithmetic."""
     if len(code) != 8 or code[0] != "G" or code[3] != "-":
         return False
-    # Spelled out rather than code[1:3].isdigit(), which is True for digits from other
-    # writing systems: "G07" and an Arabic-Indic "G٠٧" would then both mean group 7, and a
-    # superscript "G²³" would get past the test and then crash int() on the next line.
+   
     if code[1] not in "0123456789" or code[2] not in "0123456789":
         return False
     for c in code[4:8]:
@@ -563,7 +493,7 @@ def read_group_code(lines):
             continue
         rest = text[len("GROUP_CODE"):].strip()
         if not rest.startswith("="):
-            continue                      # some other name that happens to start the same
+            continue                      
         value = rest[1:].strip()
         if len(value) < 2 or value[0] not in "\"'":
             return "", "not-a-literal"
@@ -573,7 +503,7 @@ def read_group_code(lines):
             return "", "not-a-literal"
         tail = value[end + 1:].strip()
         if tail != "" and not tail.startswith("#"):
-            return "", "not-a-literal"    # glued together from pieces, or read from input()
+            return "", "not-a-literal"    
         return value[1:end], ""
     return "", "absent"
 
@@ -989,17 +919,13 @@ def collect_checks():
     when the register stops printing from inside its own logic."""
     results = []
 
-    # 0: is agent.py even here? Everything below reads or imports it, so this has to be
-    #    the first thing we say, and it has to be a result rather than a crash.
     lines = read_agent_source()
     if lines is None:
         results.append(("file_present", "agent.py is in this folder", False,
                         missing_agent_detail()))
         return results
 
-    # 1: self-contained -- the check that most often disqualifies an agent. This reads
-    #    agent.py as TEXT, before we try to import it, so a banned import is reported as
-    #    a failed check rather than as a crash.
+    
     bad_imports = bad_import_lines(lines)
     if bad_imports:
         where = []
@@ -1012,26 +938,19 @@ def collect_checks():
         results.append(("self_contained", "self-contained (only numpy/pandas/math/random)",
                         True, ""))
 
-    # The files-and-keyboard check and the banned shortcuts, also read from the TEXT before
-    # anything imports agent.py, and reported at the end of the list.
     text_results = content_checks(scan_code(lines))
 
-    # 2: your group code. Read from the TEXT, before the import, so that an agent.py with
-    #    a syntax error still tells you the code is missing rather than hiding it behind
-    #    the crash. Every group's file is called agent.py, so this line is the only thing
-    #    in it that says whose it is.
+    
     check_group_code(lines, results)
 
-    # 3: does agent.py actually load? The competition imports it on its own, with none
-    #    of your other files present, so anything that breaks here breaks there too.
+    
     TradingAgent, load_error = load_agent()
     if TradingAgent is None:
         results.append(("loads", "agent.py loads on its own", False, load_error))
         return results + text_results
     results.append(("loads", "agent.py loads on its own", True, ""))
 
-    # 4-6: the three competition information regimes. A Ctrl-C in one ends the checks
-    #      there: the report shows the line your agent was running.
+   
     if drive_regime(TradingAgent, True, False, "regime_ohlcv", "OHLCV-only regime", results):
         return results + text_results
     if drive_regime(TradingAgent, False, True, "regime_news", "news-only regime", results):
@@ -1039,9 +958,7 @@ def collect_checks():
     if drive_regime(TradingAgent, True, True, "regime_both", "OHLCV+news regime", results):
         return results + text_results
 
-    # 7: the agent must cope with a REJECT reply -- without crashing AND without
-    #    returning something malformed on the way back (resizing after a reject is
-    #    exactly where a malformed amount tends to appear).
+   
     called = TradingAgent.__init__
     try:
         agent = TradingAgent()
@@ -1056,7 +973,7 @@ def collect_checks():
         if isinstance(error, KeyboardInterrupt):
             return results + text_results
 
-    # 8: the very first call gets last_response = None.
+    
     called = TradingAgent.__init__
     try:
         agent = TradingAgent()
@@ -1086,11 +1003,10 @@ def run_checks():
     that selfcheck.py stops too rather than starting runs that would hang in the same place."""
     results = collect_checks()
     passed, total = report(results)
-    # Warnings under the checks they sit beside, never in the count: they fail nothing.
+    
     for warning_id, name, detail in collect_warnings():
         print("  [WARN] " + name + "   (" + detail + ")")
-    # About this machine rather than agent.py, so it is printed here and not collected:
-    # the online check runs the competition's libraries and never meets it.
+    
     older = older_libraries()
     if older:
         name, detail = older_libraries_warning(older)

@@ -1,29 +1,14 @@
-# agent.py -- Glacial Pace Capital competition entry.
-#
-# The thinking half of the project: given one day at a time, decide an order.
-# It never touches the money. The desk (account.py) owns cash and shares and can refuse.
-#
-# Self-contained on purpose: it imports nothing, reads no file and writes no file, so the
-# competition can load it on its own. The sentiment lexicon is copied in below as a dict.
-#
-# Strategy in two sentences: buy a dip (today's close more than 2% under its 10-day
-# average, unless the market is in a deep downtrend) or good news, and sell when the price
-# is back above its average or the news turns bad. Never put more than 40% of the money
-# into shares, so that one bad run cannot halve the account.
-
 GROUP_CODE = "G20-G7NR"       
 # Group: Dev Madanlal Malviya, Atharva Zade, Dhruv Rastogi, Anushka Vashishth, Shefali Mathur, Boyang Gao 
 # Reference: G7NR
 
-FEE = 0.001                # 0.1% fee on every trade, the same as the desk charges
-TARGET = 0.4               # when we buy, aim for 40% of our money in shares
-SHORT_WINDOW = 10          # days in the moving average a "dip" is measured against
-LONG_WINDOW = 100          # days in the moving average that tells us the long trend
-DIP = 0.02                 # a dip: close more than 2% under the short average
-BEAR_LIMIT = 0.90          # close under 90% of the long average: a downtrend, skip dips
+FEE = 0.001                
+TARGET = 0.4              
+SHORT_WINDOW = 10          
+LONG_WINDOW = 100          
+DIP = 0.02                 
+BEAR_LIMIT = 0.90          
 
-# The 28 scored words of sentiment_words.csv (the 12 neutral words score 0, so they can
-# stay out). Copied in because agent.py may not read files.
 LEXICON = {
     "surge": 1, "rally": 1, "soar": 1, "gain": 1, "bullish": 1, "breakout": 1,
     "upgrade": 1, "beat": 1, "record": 1, "boom": 1, "jump": 1, "optimism": 1,
@@ -38,13 +23,11 @@ class TradingAgent:
     """Dip-buying plus news-reading agent. Works in all three regimes."""
 
     def __init__(self):
-        self.closes = []          # every close we have seen, oldest first
-        self.short_sum = 0.0      # running sum of the last SHORT_WINDOW closes
-        self.long_sum = 0.0       # running sum of the last LONG_WINDOW closes
-        self.price = None         # the latest price we know (a close, or our own fill)
-        self.before = None        # (cash, shares) when we sent our previous order
-
-    # ---------- what we remember ----------
+        self.closes = []          
+        self.short_sum = 0.0      
+        self.long_sum = 0.0       
+        self.price = None         
+        self.before = None       
 
     def remember_close(self, close):
         """Store today's close and keep both moving-average sums up to date.
@@ -71,12 +54,10 @@ class TradingAgent:
         elif moved < 0:                                 # we sold
             self.price = (cash - old_cash) / (-moved * (1 - FEE))
 
-    # ---------- the two votes ----------
-
     def price_vote(self):
         """+1 on a dip worth buying, -1 once the price is back above its average, else 0."""
         if len(self.closes) < SHORT_WINDOW:
-            return 0                                    # not enough history yet
+            return 0                                    
         close = self.closes[-1]
         short_average = self.short_sum / SHORT_WINDOW
         if close > short_average:
@@ -85,7 +66,7 @@ class TradingAgent:
             if len(self.closes) >= LONG_WINDOW:
                 long_average = self.long_sum / LONG_WINDOW
                 if close < long_average * BEAR_LIMIT:
-                    return 0                            # falling knife: do not buy it
+                    return 0                            
             return 1
         return 0
 
@@ -99,16 +80,14 @@ class TradingAgent:
                     mood = mood + LEXICON[word]
         return mood
 
-    # ---------- the order ----------
-
     def buy_order(self, cash, shares):
         """How much to buy: top our shares up to TARGET of our money."""
         if self.price is None:
-            return ("BUY", 1)          # news-only, first trade: one share tells us the price
+            return ("BUY", 1)          
         holding = shares * self.price
         money = cash + holding
         if holding >= money * TARGET / 2:
-            return ("HOLD", 0)         # already invested enough
+            return ("HOLD", 0)         
         count = int((money * TARGET - holding) / (self.price * (1 + FEE)))
         if count <= 0:
             return ("HOLD", 0)
@@ -120,15 +99,15 @@ class TradingAgent:
         self.before = (cash, shares)
 
         vote = 0
-        if bar is not None:                             # OHLCV-only and both runs
+        if bar is not None:                             
             self.remember_close(bar["close"])
             self.price = bar["close"]
             vote = vote + self.price_vote()
-        if headlines is not None:                       # news-only and both runs
+        if headlines is not None:                       
             vote = vote + self.news_vote(headlines)
 
         if vote < 0 and shares > 0:
-            return ("SELL", -1)                         # get out completely
+            return ("SELL", -1)                        
         if vote > 0:
             return self.buy_order(cash, shares)
         return ("HOLD", 0)

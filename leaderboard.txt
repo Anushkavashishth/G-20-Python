@@ -1,3 +1,7 @@
 rank,name,final_equity
 1,TradingAgent on ZNTH [OHLCV+news],12366.84
 2,TradingAgent on ZNTH [OHLCV+news],12366.84
+3,TradingAgent on QBIT [OHLCV+news],10440.11
+4,TradingAgent on QBIT [OHLCV+news],10440.11
+5,Hold on QBIT [OHLCV+news],10000.00
+6,Hold on QBIT [OHLCV+news],10000.00

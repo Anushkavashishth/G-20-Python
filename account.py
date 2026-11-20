@@ -1,12 +1,7 @@
-# account.py -- the authority: the desk's ledger of cash and shares.
-# Reference: <full name of the account-and-engine reference member>
-#
-# Every order, the agent's and the manual ones, goes through Account.execute. It is the
-# only code in the program that changes cash or shares, and it can refuse.
 
 import math
 
-FEE = 0.001     # 0.1% charged on every buy and every sell
+FEE = 0.001    
 ACTIONS = ("BUY", "SELL", "HOLD")
 
 
@@ -33,7 +28,7 @@ class Account:
         assert shares >= 0, "shares cannot be negative"
         self.cash = float(cash)
         self.shares = float(shares)
-        self.trades = []            # one (day, action, shares, price) per filled order
+        self.trades = []            
 
     def __str__(self):
         return "cash " + str(round(self.cash, 2)) + " | shares " + str(round(self.shares, 4))
@@ -45,7 +40,7 @@ class Account:
     def max_affordable(self, price):
         """The largest whole number of shares the cash covers after the fee."""
         count = int(self.cash / (price * (1 + FEE)))
-        # A division that lands exactly on a whole share can round up: take it back.
+       
         if count > 0 and count * price * (1 + FEE) > self.cash:
             count = count - 1
         return count
@@ -65,7 +60,7 @@ class Account:
             if amount < 0:
                 amount = self.max_affordable(price)
             if amount == 0:
-                return "ACCEPT"                     # nothing to buy
+                return "ACCEPT"                    
             cost = amount * price * (1 + FEE)
             if cost > self.cash:
                 return "REJECT currency balance: " + str(round(self.cash, 2))
@@ -78,7 +73,7 @@ class Account:
             if amount < 0:
                 amount = self.shares
             if amount == 0:
-                return "ACCEPT"                     # nothing to sell
+                return "ACCEPT"                   
             if amount > self.shares:
                 return "REJECT stock owned: " + str(round(self.shares, 2))
             self.cash = self.cash + amount * price * (1 - FEE)
@@ -86,4 +81,4 @@ class Account:
             self.trades.append((day, "SELL", amount, price))
             return "ACCEPT"
 
-        return "ACCEPT"                             # HOLD
+        return "ACCEPT"                             

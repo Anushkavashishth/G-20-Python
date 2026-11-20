@@ -1,13 +1,9 @@
-# simulator.py -- the back-test engine: streams days to an agent, with no look-ahead.
-# Reference: <full name of the account-and-engine reference member>
-#
-# The golden rule: on day t the agent sees days 0..t only, and its order fills at the
-# OPEN of day t+1. The engine never hands the agent a future bar, so peeking is impossible.
+
 
 import analytics
 from account import Account, is_valid_order
 
-# The three information regimes of the competition: (label, sees prices, sees news).
+
 REGIMES = {
     "both": ("OHLCV+news", True, True),
     "prices": ("OHLCV-only", True, False),
@@ -19,12 +15,12 @@ class RunResult:
     """Everything one back-test produced: the equity curve, the trades and the metrics."""
 
     def __init__(self, name, ticker, regime, equity, trades, problems):
-        self.name = name                # e.g. "TradingAgent on ZNTH"
+        self.name = name                
         self.ticker = ticker
         self.regime = regime
-        self.equity = equity            # one value per day, cash + shares * close
-        self.trades = trades            # (day, action, shares, price), day = the fill day
-        self.problems = problems        # messages about malformed orders, if any
+        self.equity = equity            
+        self.trades = trades            
+        self.problems = problems       
         self.final_equity = equity[-1]
         self.total_return = analytics.total_return(equity)
         self.max_drawdown = analytics.max_drawdown(equity)
@@ -79,9 +75,9 @@ class Simulator:
                 problems.append("day " + str(t) + ": malformed order " + repr(order)[:60]
                                 + ", treated as HOLD")
                 order = ("HOLD", 0)
-            fill_price = float(opens[t + 1])            # tomorrow's open, never today's
+            fill_price = float(opens[t + 1])            
             last_response = self.account.execute(order[0], order[1], fill_price, day=t + 1)
-            equity.append(self.account.equity(closes[t + 1]))   # valued at tomorrow's close
+            equity.append(self.account.equity(closes[t + 1]))  
         if name is None:
             name = type(self.agent).__name__ + " on " + self.market.ticker
         return RunResult(name, self.market.ticker, REGIMES[self.regime][0], equity,

@@ -1,44 +1,6 @@
-# selfcheck.py
-#
-# A friendlier, fuller self-check you can run while building your agent. It does NOT mark
-# your project and is worth no points -- it just helps you find problems early, on your
-# own machine, without seeing any solution code. It runs:
-#   1. the basic protocol check (agent_unittest), which includes your group code;
-#   2. an end-to-end run in all three regimes (no crashes, sane equity) on the training
-#      market your group code picks out for your report's figures;
-#   3. a determinism check -- with the generators seeded the way the competition host
-#      seeds them, the same data must give the same result twice.
-# It also warns when your agent never has 10% of its money in shares on any of the three
-# runs: fine while you build, and the starting stub earns it, but in the competition a run
-# like that scores 0 and an agent with no run above it is not placed.
-#
-# Run with:   python3 selfcheck.py           (it reads your group code out of agent.py)
-#         or: python3 selfcheck.py G07       (the same, and it checks G07 is really you)
-# On Windows, type python where these say python3.
-#
-# You never type a ticker. Your group code says which training market your report's
-# figures come from, and the code lives in agent.py, so the tool reads it from the file
-# rather than guessing or asking; you still build and test your agent on all four markets.
-# Type the G-and-number half if you want it double-checked; never type the four characters
-# after the dash into a terminal, they are not for screens other people see.
-#
-# Every problem it finds names its line in agent.py. If it seems to hang, press Ctrl-C
-# once: the report names the line your agent was running, and nothing else starts.
-#
-# Keep this file and agent_unittest.py next to your agent.py. It looks for the training
-# data in data/training/ and then in ../data/training/; if it finds neither it says so and
-# still gives you a verdict on everything it could check.
-#
-# Note the classic bug it guards against: if you compute returns by slicing a pandas
-# *Series* (close[1:] / close[:-1]) instead of a numpy array, pandas lines the slices up
-# by index label and silently gives you all zeros. Always np.array(...) first.
-
 import random
 import sys
 
-# numpy and pandas first, because nothing below runs without them. A Python that lacked
-# them stopped here with a raw traceback, which Python 3.15 ends with "Did you mean:
-# 'runpy'?" (review 184); the report now says what is missing and how to install it.
 try:
     import numpy as np
     import pandas as pd
@@ -51,20 +13,8 @@ except ImportError as missing:
     sys.exit(1)
 
 import agent_unittest
-
-# The four training tickers, in the order that assigns them: group 1 gets the first,
-# group 5 wraps back round to it. This order is the assignment, so re-sorting this tuple
-# would quietly hand every group a different market.
 TICKERS = ("VOLT", "ZNTH", "NOVA", "QBIT")
-
-# Where the training data might be, depending on where you keep these files. We try each
-# in turn and use the first one that is really there.
 DATA_DIRS = ("data/training/", "../data/training/")
-
-# The competition's exposure floor. A run on which your agent never had this share of its
-# money in shares scores 0 there, as if it had not traded, and an agent with no run above
-# the floor is not placed. Holding in a run your agent cannot read is fine: an agent that
-# reads only prices holds in the news-only run and is placed on the others.
 EXPOSURE_FLOOR = 0.10
 NEVER_TRADED = ("never had 10% of its money in shares",
                 "on any of the three runs. Fine while you build; in the competition a "
@@ -204,8 +154,7 @@ def run_measured(agent_class, bars, news, use_prices, use_news):
             order = agent.decide(bar, headlines, interface.cash, interface.shares,
                                  last_response)
         except KeyboardInterrupt as error:
-            # An agent that never returns on real data shows its line too, once you press
-            # Ctrl-C, and main() stops there rather than starting the next run.
+            
             return "day " + str(t) + ": " + agent_unittest.error_with_line(error), peak
         except Exception as error:
             return ("crash on day " + str(t) + ": "
@@ -226,15 +175,9 @@ def run_measured(agent_class, bars, news, use_prices, use_news):
 
 
 def main():
-    # 1. Protocol conformance. Its verdict counts toward ours, and it is what reports a
-    #    missing or mistyped group code, so we do it before anything that needs the code.
     passed, total = agent_unittest.run_checks()
     all_ok = (passed == total)
     print()
-
-    # 2. Which market the report's figures come from. Not typed and never defaulted: it
-    #    comes from the group code in your own agent.py, so there is nothing here to get
-    #    wrong and nothing to guess.
     lines = agent_unittest.read_agent_source() or []
     code, problem = agent_unittest.read_group_code(lines)
     if problem != "" or not agent_unittest.is_valid_code(code):
@@ -246,8 +189,7 @@ def main():
         print("  Some checks failed -- read the lines above.")
         return
 
-    # If you named a group on the command line, it has to be the one in the file. This is
-    # the check that catches an agent.py picked up from another group.
+   
     public = code[:3]
     if len(sys.argv) > 1 and sys.argv[1].strip() != "":
         typed = sys.argv[1].strip().upper()
@@ -263,7 +205,6 @@ def main():
     ticker = ticker_for(agent_unittest.group_number(code))
     print("=== selfcheck: extra formative checks (" + public + ", market " + ticker + ") ===")
 
-    # Nothing below can run if agent.py will not import on its own.
     TradingAgent, load_error = agent_unittest.load_agent()
     if TradingAgent is None:
         print("  [skip] agent.py does not load on its own (" + load_error + ")")
@@ -271,7 +212,6 @@ def main():
         print("  Some checks failed -- read the lines above.")
         return
 
-    # 2. End-to-end on the training data, all three regimes.
     folder = find_data_dir(ticker)
     if folder == "":
         print("  [skip] " + name_what_is_missing(ticker)
@@ -316,8 +256,6 @@ def main():
             saved[label] = equity
             peaks.append(peak)
 
-    # 3. Determinism: run "both" again and compare. Only meaningful if "both" worked the
-    #    first time; otherwise say what actually went wrong instead of blaming randomness.
     if "both" not in saved:
         print("  [skip] determinism: the 'both' run above did not finish, so there is "
               + "nothing to compare")
@@ -336,7 +274,6 @@ def main():
                   + "clock, a set of floats, id(), or state kept between runs.")
             all_ok = False
 
-    # A warning, never a failure: the stub holds every day and is a legal agent.
     if len(peaks) == 3 and max(peaks) < EXPOSURE_FLOOR:
         print("  [WARN] " + NEVER_TRADED[0] + "   (" + NEVER_TRADED[1] + ")")
 
@@ -354,5 +291,5 @@ if __name__ == "__main__":
     try:
         main()
     except KeyboardInterrupt:
-        # agent_unittest has already printed where your agent was; nothing to add.
+
         sys.exit(130)

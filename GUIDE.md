@@ -20,7 +20,7 @@ my_trading_desk/
     data/training/      the nine training files, unchanged
 ```
 
-Run everything from inside `my_trading_desk` (on Windows type `python` instead of `python3`):
+Run everything from inside `my_trading_desk` (on Windows type `python` instead of `python3`): 
 
 ```
 python3 desk.py            the trading desk

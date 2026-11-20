@@ -1,9 +1,3 @@
-# tests.py -- asserts that prove the account's rules, the metrics and the engine.
-# Reference: <full name of the saving-and-tests reference member>
-#
-# Run it with:   python3 tests.py       (on Windows: python tests.py)
-# Every test is a plain function of asserts; the first one that fails stops with its message.
-
 import time
 
 import numpy as np
@@ -16,7 +10,6 @@ from storage import Storage
 
 
 def test_fee_and_buy_max():
-    # The contract's worked example: $500 at $25 with the 0.1% fee buys 19 shares, not 20.
     account = Account(500.0, 0.0)
     assert account.max_affordable(25.0) == 19
     assert account.execute("BUY", -1, 25.0) == "ACCEPT"
@@ -27,11 +20,10 @@ def test_fee_and_buy_max():
 def test_reject_strings():
     account = Account(10.0, 0.0)
     assert account.execute("BUY", 1, 25.0) == "REJECT currency balance: 10.0"
-    assert account.cash == 10.0 and account.shares == 0       # a reject changes nothing
+    assert account.cash == 10.0 and account.shares == 0      
     account = Account(1000.0, 19.0)
     assert account.execute("SELL", 20, 25.0) == "REJECT stock owned: 19.0"
     assert account.shares == 19
-    # the number in the reply parses the way the contract says: split(": ") and float()
     assert float("REJECT stock owned: 19.0".split(": ")[1]) == 19.0
 
 
@@ -40,7 +32,7 @@ def test_sell_fee_and_sell_all():
     assert account.execute("SELL", -1, 100.0) == "ACCEPT"
     assert account.shares == 0
     assert abs(account.cash - 10 * 100.0 * 0.999) < 1e-9
-    assert account.execute("SELL", -1, 100.0) == "ACCEPT"    # nothing left: still ACCEPT
+    assert account.execute("SELL", -1, 100.0) == "ACCEPT"    
 
 
 def test_order_validation():
@@ -54,7 +46,6 @@ def test_order_validation():
 
 
 def test_metrics_hand_trace():
-    # The interview's hand-trace: equity 100, 120, 90, 110.
     equity = [100.0, 120.0, 90.0, 110.0]
     dd = analytics.drawdown_series(equity)
     assert dd[0] == 0 and dd[1] == 0
@@ -101,16 +92,15 @@ def tiny_market():
 def test_no_look_ahead():
     agent = RecordingAgent()
     result = Simulator(tiny_market(), agent, 100.0, 0.0, "both").run()
-    assert len(agent.seen) == 2                       # every day but the last
-    assert agent.seen[0][0]["close"] == 11.0          # day 0 sees day 0 only
-    assert agent.seen[0][2] is None                   # first call: no reply yet
+    assert len(agent.seen) == 2                       
+    assert agent.seen[0][0]["close"] == 11.0          
+    assert agent.seen[0][2] is None                   
     assert agent.seen[1][2] == "ACCEPT"
-    assert agent.seen[1][1] == []                     # a day without news: empty list
+    assert agent.seen[1][1] == []                     
     day, action, shares, price = result.trades[0]
-    assert day == 1 and price == 20.0                 # filled at the NEXT day's open
+    assert day == 1 and price == 20.0                 
     assert len(result.equity) == 3
-    assert abs(result.equity[1] - (100 - 20 * 1.001 + 21)) < 1e-9   # valued at the close
-
+    assert abs(result.equity[1] - (100 - 20 * 1.001 + 21)) < 1e-9   
 
 def test_regimes():
     agent = RecordingAgent()

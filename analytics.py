@@ -1,21 +1,15 @@
-# analytics.py -- indicators, metrics and charts, built by hand.
-# Reference: <full name of the analytics-and-charts reference member>
-#
-# No pandas shortcuts (rolling, shift, pct_change, cumprod) and no plt.hist: every number
-# here comes from numpy slicing or a plain loop, as the time-series supplement shows.
+
 
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
-MA_WINDOW = 10      # the moving average drawn on the price chart (the agent uses 10 too)
+MA_WINDOW = 10     
 
-
-# ---------- indicators ----------
 
 def daily_returns(values):
     """Day-on-day returns: today / yesterday - 1, by slicing a numpy array."""
-    values = np.array(values, dtype=float)          # an array before we slice it
+    values = np.array(values, dtype=float)          
     if len(values) < 2:
         return np.array([])
     return values[1:] / values[:-1] - 1
@@ -48,8 +42,6 @@ def moving_average_naive(values, window):
         averages.append(values[i - window:i].mean())
     return averages
 
-
-# ---------- the three metrics ----------
 
 def total_return(equity):
     """(final equity - starting equity) / starting equity."""
@@ -92,7 +84,7 @@ def sharpe_like(equity):
     return float(returns.mean() / spread)
 
 
-# ---------- the three charts ----------
+
 
 def finish_chart(title, xlabel, ylabel, filename):
     """Title, labels and legend, save a PNG beside the program, then show the window."""

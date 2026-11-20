@@ -1,15 +1,3 @@
-# storage.py -- saving and loading our own outputs, in plain text.
-# Reference: <full name of the saving-and-tests reference member>
-#
-# Three files, all ours (the market data is never written):
-#   results.txt      one line per saved run:  name,final_equity,trades,return,max_dd,sharpe
-#   leaderboard.txt  rewritten from every saved run, best final equity first:
-#                    rank,name,final_equity
-#   session.txt      the manual session, one key=value per line; its equity history is
-#                    equity=v0;v1;... and its trades trades=day:action:shares:price|...
-# Storage is the one class that knows these line formats; the desk only asks it to save
-# and load.
-
 RESULTS_FILE = "results.txt"
 LEADERBOARD_FILE = "leaderboard.txt"
 SESSION_FILE = "session.txt"
@@ -25,8 +13,6 @@ class Storage:
         self.results_file = results_file
         self.leaderboard_file = leaderboard_file
         self.session_file = session_file
-
-    # ---------- one line <-> one result ----------
 
     def format_result(self, name, final_equity, trades, total_return, max_dd, sharpe):
         """One result as one line. Commas in the name would break the format, so swap them."""
@@ -45,7 +31,7 @@ class Storage:
         return (parts[0], float(parts[1]), int(parts[2]), float(parts[3]),
                 float(parts[4]), float(parts[5]))
 
-    # ---------- results and leaderboard ----------
+    
 
     def load_results(self):
         """Every saved run. A missing file is an empty list; a damaged line is skipped."""
@@ -117,7 +103,6 @@ class Storage:
         handle.close()
         return board
 
-    # ---------- the manual session ----------
 
     def save_session(self, values, equity, trades):
         """values is a dict with every key in SESSION_KEYS; equity a list of numbers;

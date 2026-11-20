@@ -1,14 +1,3 @@
-# desk.py -- the Glacial Pace Capital trading desk: the text menu that starts the program.
-# Reference: <full name of the desk reference member>
-#
-# Run it with:   python3 desk.py                     (on Windows: python desk.py)
-# Optional settings, each with a default:
-#   python3 desk.py --cash 5000 --shares 0 --ticker ZNTH --folder data/training/
-#
-# The desk owns the money for the manual session (an Account) and starts every agent run
-# on a fresh Account of its own (the Simulator). A trade typed here fills at TODAY's
-# close; an agent's order fills at TOMORROW's open.
-
 import math
 import sys
 
@@ -35,8 +24,6 @@ MENU = """
  [9] Save / load / leaderboard [0] Quit
 ======================================================="""
 
-
-# ---------- reading the keyboard safely ----------
 
 def ask(prompt, default=""):
     """input() with a default shown in brackets; an empty answer means the default."""
@@ -92,8 +79,6 @@ def parse_arguments(arguments):
     return settings
 
 
-# ---------- the desk ----------
-
 class Desk:
     """The menu, the manual session and the last agent run."""
 
@@ -104,13 +89,12 @@ class Desk:
         self.start_shares = start_shares
         self.account = Account(start_cash, start_shares)
         self.day = 0
-        self.equity = []            # the manual session's equity, one value per day so far
+        self.equity = []           
         self.last_event = "none yet"
-        self.last_run = None        # the latest RunResult from option 6
+        self.last_run = None        
         self.run_saved = False
         self.storage = Storage()
 
-    # ----- state shown after every action -----
 
     def price_today(self):
         return float(self.market.closes[self.day])
@@ -146,7 +130,7 @@ class Desk:
             self.equity = [self.account.equity(self.price_today())]
         self.last_event = "session reset to day 0"
 
-    # ----- the menu options -----
+  
 
     def load_dataset(self, ticker="", folder=""):
         if ticker == "":
@@ -159,7 +143,7 @@ class Desk:
             print("  Could not load: " + str(error))
             print("  Check the ticker and that the data sits in the folder you named.")
             return False
-        except Exception as error:          # a damaged CSV pandas cannot parse
+        except Exception as error:          
             print("  Could not read the price file: " + type(error).__name__ + ": "
                   + str(error))
             return False
@@ -334,7 +318,7 @@ class Desk:
         self.account.trades = values["trades"]
         self.day = values["day"]
         self.equity = values["equity"]
-        if len(self.equity) != self.day + 1:          # an older file without the history
+        if len(self.equity) != self.day + 1:         
             self.equity = [self.account.equity(self.price_today())] * (self.day + 1)
         self.last_event = "loaded session"
         print("  Loaded session: " + self.market.ticker + " day " + str(self.day) + ".")
@@ -349,7 +333,6 @@ class Desk:
         for rank, name, final in board[:10]:
             print("  " + str(rank) + ". " + name + "  " + format(final, ".2f"))
 
-    # ----- the loop -----
 
     def run(self):
         actions = {"1": self.load_dataset, "2": self.set_balances, "3": self.step,

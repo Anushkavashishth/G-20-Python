@@ -1,9 +1,9 @@
-ticker=ZNTH
+ticker=QBIT
 folder=data/training/
-day=0
-cash=10000.0
-shares=0.0
+day=2
+cash=8992.7938
+shares=10.0
 start_cash=10000.0
 start_shares=0.0
-equity=10000.000000
-trades=
+equity=10000.000000;10000.000000;9998.993800
+trades=2:BUY:10.0:100.62

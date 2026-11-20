@@ -1,10 +1,3 @@
-# data_loader.py -- reading the market files, kept apart from any strategy.
-# Reference: <full name of the data-loading reference member>
-#
-# The training files are read exactly as distributed, at run time, every time. Nothing
-# here converts, cleans or re-saves them; a held-back market in the same schema loads
-# with no change.
-
 import numpy as np
 import pandas as pd
 
@@ -24,7 +17,7 @@ class MarketData:
         self.lows = lows
         self.closes = closes
         self.volumes = volumes
-        self.news = news            # {day: [headline, ...]}; a day with no news is absent
+        self.news = news           
 
     def __len__(self):
         return len(self.closes)

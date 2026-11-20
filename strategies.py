@@ -1,11 +1,3 @@
-# strategies.py -- simple benchmark agents to compare our TradingAgent against.
-# Reference: <full name of the agent reference member>
-#
-# These live outside agent.py on purpose: agent.py must stand alone for the competition,
-# so it cannot inherit from anything here. The benchmarks share a base class instead.
-# Each has the same decide() signature as the contract, so the Simulator runs any of them.
-
-
 class BaseAgent:
     """The shape every agent has. A subclass must write its own decide()."""
 
